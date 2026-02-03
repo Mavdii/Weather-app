@@ -2,15 +2,15 @@
 
 # ☀️ Climapro - Premium Weather Experience
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/yourusername/climapro)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/Mavdii/Weather-app)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/yourusername/climapro/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/yourusername/climapro?style=social)](https://github.com/yourusername/climapro)
-[![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-lightgrey.svg)](https://github.com/yourusername/climapro)
+[![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/Mavdii/Weather-app/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/Mavdii/Weather-app?style=social)](https://github.com/Mavdii/Weather-app)
+[![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-lightgrey.svg)](https://github.com/Mavdii/Weather-app)
 
 *A modern, feature-rich weather application with dynamic themes, AI-powered insights, and stunning visualizations*
 
-[Download APK](https://github.com/yourusername/climapro/releases/download/v1.0.0/climapro-v1.0.0.apk) • [Report Bug](https://github.com/yourusername/climapro/issues) • [Request Feature](https://github.com/yourusername/climapro/issues)
+[Download APK](https://github.com/Mavdii/Weather-app/releases/download/v1.0.0/climapro-v1.0.0.apk) • [Report Bug](https://github.com/Mavdii/Weather-app/issues) • [Request Feature](https://github.com/Mavdii/Weather-app/issues)
 
 </div>
 
@@ -152,7 +152,7 @@ Experience weather like never before with:
 
 **Download the APK directly:**
 
-1. Go to [Releases](https://github.com/yourusername/climapro/releases)
+1. Go to [Releases](https://github.com/Mavdii/Weather-app/releases)
 2. Download `climapro-v1.0.0.apk`
 3. Install on your Android device
 4. Allow installation from unknown sources if prompted
@@ -164,8 +164,8 @@ Experience weather like never before with:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/climapro.git
-cd climapro
+git clone https://github.com/Mavdii/Weather-app.git
+cd Weather-app
 
 # Install dependencies
 npm install
