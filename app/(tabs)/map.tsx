@@ -1,16 +1,30 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Platform, ScrollView, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import MapView, { Marker, UrlTile, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AnimatedText } from '@/components/ui/AnimatedText';
 import { IconButton } from '@/components/ui/IconButton';
+import { GradientBackground } from '@/components/ui/GradientBackground';
 import { useWeather } from '@/contexts/WeatherContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { MapOverlay } from '@/types/weather';
+
+// Conditionally import react-native-maps only on native platforms
+let MapView: React.ComponentType<any> | null = null;
+let Marker: React.ComponentType<any> | null = null;
+let UrlTile: React.ComponentType<any> | null = null;
+let PROVIDER_DEFAULT: any = null;
+
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+  UrlTile = Maps.UrlTile;
+  PROVIDER_DEFAULT = Maps.PROVIDER_DEFAULT;
+}
 
 const overlayOptions: { id: MapOverlay; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { id: 'none', label: 'None', icon: 'close-circle-outline' },
@@ -41,11 +55,135 @@ const getOverlayUrl = (overlay: MapOverlay): string | null => {
   }
 };
 
+// Web fallback component when Maps is not available
+function WebMapFallback() {
+  const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+  const { weatherData, selectedCity, formatTemperature } = useWeather();
+
+  const openExternalMap = useCallback(() => {
+    if (selectedCity) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${selectedCity.coordinates.latitude},${selectedCity.coordinates.longitude}`;
+      Linking.openURL(url);
+    }
+  }, [selectedCity]);
+
+  return (
+    <View style={styles.container}>
+      <GradientBackground />
+      <ScrollView
+        style={styles.webScrollView}
+        contentContainerStyle={[
+          styles.webContent,
+          { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 100 },
+        ]}
+      >
+        <Animated.View entering={FadeIn.duration(500)}>
+          <GlassCard style={styles.webHeader} padding={20} borderRadius={20}>
+            <Ionicons name="map" size={48} color={theme.accent} />
+            <AnimatedText variant="title" color="primary" style={styles.webTitle}>
+              Weather Map
+            </AnimatedText>
+            <AnimatedText variant="body" color="secondary" style={styles.webSubtitle}>
+              Interactive maps are available on the mobile app
+            </AnimatedText>
+          </GlassCard>
+        </Animated.View>
+
+        {/* Location Info */}
+        {selectedCity && weatherData && (
+          <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+            <GlassCard padding={20} borderRadius={20}>
+              <View style={styles.webLocationHeader}>
+                <Ionicons name="location" size={24} color={theme.accent} />
+                <AnimatedText variant="subtitle" color="primary">
+                  Current Location
+                </AnimatedText>
+              </View>
+
+              <View style={styles.webLocationDetails}>
+                <View style={styles.webLocationInfo}>
+                  <AnimatedText variant="title" color="primary">
+                    {selectedCity.name}
+                  </AnimatedText>
+                  <AnimatedText variant="caption" color="secondary">
+                    {selectedCity.country}
+                  </AnimatedText>
+                </View>
+                <View style={styles.webWeatherInfo}>
+                  <AnimatedText variant="hero" color="primary">
+                    {formatTemperature(weatherData.current.temperature)}
+                  </AnimatedText>
+                  <AnimatedText variant="caption" color="secondary">
+                    {weatherData.current.description}
+                  </AnimatedText>
+                </View>
+              </View>
+
+              <View style={styles.webCoordinates}>
+                <View style={styles.webCoordItem}>
+                  <AnimatedText variant="caption" color="secondary">
+                    Latitude
+                  </AnimatedText>
+                  <AnimatedText variant="body" color="primary">
+                    {selectedCity.coordinates.latitude.toFixed(4)}°
+                  </AnimatedText>
+                </View>
+                <View style={styles.webCoordItem}>
+                  <AnimatedText variant="caption" color="secondary">
+                    Longitude
+                  </AnimatedText>
+                  <AnimatedText variant="body" color="primary">
+                    {selectedCity.coordinates.longitude.toFixed(4)}°
+                  </AnimatedText>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.webMapButton, { backgroundColor: theme.accent }]}
+                onPress={openExternalMap}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="open-outline" size={20} color="#fff" />
+                <AnimatedText variant="body" style={styles.webButtonText}>
+                  Open in Google Maps
+                </AnimatedText>
+              </TouchableOpacity>
+            </GlassCard>
+          </Animated.View>
+        )}
+
+        {/* Weather Layers Info */}
+        <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+          <GlassCard padding={20} borderRadius={20}>
+            <AnimatedText variant="subtitle" color="primary" style={styles.webSectionTitle}>
+              Weather Layers
+            </AnimatedText>
+            <AnimatedText variant="body" color="secondary" style={styles.webDescription}>
+              On the mobile app, you can view interactive weather layers including:
+            </AnimatedText>
+            <View style={styles.webLayersList}>
+              {overlayOptions.filter(o => o.id !== 'none').map((option) => (
+                <View key={option.id} style={styles.webLayerItem}>
+                  <Ionicons name={option.icon} size={24} color={theme.accent} />
+                  <AnimatedText variant="body" color="primary">
+                    {option.label}
+                  </AnimatedText>
+                </View>
+              ))}
+            </View>
+          </GlassCard>
+        </Animated.View>
+      </ScrollView>
+    </View>
+  );
+}
+
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
   const { weatherData, selectedCity, formatTemperature } = useWeather();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
 
   const [selectedOverlay, setSelectedOverlay] = useState<MapOverlay>('none');
 
@@ -64,13 +202,17 @@ export default function MapScreen() {
       };
 
   const handleOverlaySelect = useCallback((overlay: MapOverlay) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setSelectedOverlay(overlay);
   }, []);
 
   const handleCenterOnCity = useCallback(() => {
     if (selectedCity && mapRef.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
       mapRef.current.animateToRegion({
         latitude: selectedCity.coordinates.latitude,
         longitude: selectedCity.coordinates.longitude,
@@ -81,6 +223,11 @@ export default function MapScreen() {
   }, [selectedCity]);
 
   const overlayUrl = getOverlayUrl(selectedOverlay);
+
+  // Show web fallback on web platform
+  if (Platform.OS === 'web' || !MapView) {
+    return <WebMapFallback />;
+  }
 
   return (
     <View style={styles.container}>
@@ -95,7 +242,7 @@ export default function MapScreen() {
         userInterfaceStyle={isDark ? 'dark' : 'light'}
       >
         {/* Weather overlay tiles */}
-        {overlayUrl && (
+        {overlayUrl && UrlTile && (
           <UrlTile
             urlTemplate={overlayUrl}
             maximumZ={19}
@@ -105,7 +252,7 @@ export default function MapScreen() {
         )}
 
         {/* City marker */}
-        {selectedCity && weatherData && (
+        {selectedCity && weatherData && Marker && (
           <Marker
             coordinate={{
               latitude: selectedCity.coordinates.latitude,
@@ -297,4 +444,74 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   indicatorCard: {},
+  // Web fallback styles
+  webScrollView: {
+    flex: 1,
+  },
+  webContent: {
+    paddingHorizontal: 20,
+    gap: 20,
+  },
+  webHeader: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  webTitle: {
+    textAlign: 'center',
+  },
+  webSubtitle: {
+    textAlign: 'center',
+  },
+  webLocationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  webLocationDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  webLocationInfo: {
+    flex: 1,
+  },
+  webWeatherInfo: {
+    alignItems: 'flex-end',
+  },
+  webCoordinates: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 16,
+  },
+  webCoordItem: {
+    flex: 1,
+  },
+  webMapButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  webButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  webSectionTitle: {
+    marginBottom: 12,
+  },
+  webDescription: {
+    marginBottom: 16,
+  },
+  webLayersList: {
+    gap: 12,
+  },
+  webLayerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
 });
